@@ -4,7 +4,6 @@
 ### Etudiants 
 + Jesinethan Parthipan, 
 + Santiago Vargas Triana, 
-+ Savitha Radjagobal, 
 + Anissa Kourban Houssen Fassy  
 ### Encadrant  
 + Thomas Dufaud
