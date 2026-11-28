@@ -54,7 +54,7 @@ def index_2D(m, s, c, n, sizeC, smax, size2D):
 
 
 
-n1, n2 = (3, 3)
+n1, n2 = (3,3)
 n = n1 * n2
 L= [] # Listes de toutes les arêtes internes(atomes voisins sur la grille n1xn2)
 

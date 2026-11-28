@@ -1,8 +1,7 @@
 # Optimisation du stockage de donnée d'un code Monte-Carlo pour le calcul de la densité d'état à transition de spin
 
 ## Composition du groupe
-### Etudiants 
-+ Jesinethan Parthipan, 
+### Etudiants , 
 + Santiago Vargas Triana, 
 + Anissa Kourban Houssen Fassy  
 ### Encadrant  
