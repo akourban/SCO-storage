@@ -4,26 +4,14 @@
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
-#define NL 3
-#define NC 3
-#define NSITES NL*NC
-
-#define nhsc_max ( NC*2+(NL-2)*2 )
-#define NBRE_D 6
-#define S_MAX   ( NL*(NC-1)+NC*(NL-1) )
-
-#define NPAS_MC 100000
+#include "code_source.h"
 
 int nhs,s,nhsc;
 int sizeC, smax, size2D;
 
-float d[NSITES+1][S_MAX+1][nhsc_max+1];
+double d[NSITES+1][S_MAX+1][nhsc_max+1];
 int tab[NL+2][NC+2], lig[NSITES+1], col[NSITES+1];
-void init_config (void);
-void init_densite(void);
-void ligcol (void);
-void montecarlo (void) ;
-void imprimer (void) ;
+
 
 int size_2D(int n1, int n2, int sizeC){
   int n, smax, ll, rs;
@@ -50,60 +38,51 @@ int index_2D(int m, int s, int c, int n, int sizeC, int smax, int size2D){
   
   if (s==0){
     k = size2D - (n+1)*sizeC + m*sizeC + c ;
-  }
-  else{
-    
+  } else {
     if (n%2 == 0){
       ll = n/2-1;
       sizeP1 = 2*ll*(ll+1)*sizeC;
       if (m < (n/2)+1){
-	if ((s<=4*m)&&(s<=smax)){ 
-	  k = 2*(m-1)*((m-1)+1)*sizeC + (s-1)*sizeC + c;
-	}
-	else{
-	  k = -1;
-	}
-      }
-      else {
-	ii = (m-1-n/2);
-	kk = 2*(ll*(ll+1)-(ll-ii)*(ll-ii+1));
-	if (s<=4*(n-m)){
-	  k = sizeP1 + (smax)*sizeC + kk*sizeC + (s-1)*sizeC + c;
+        if ((s<=4*m)&&(s<=smax)){ 
+          k = 2*(m-1)*((m-1)+1)*sizeC + (s-1)*sizeC + c;
+        } else {
+          k = -1;
         }
-	else{
-	  k=-1;
-	}
+      } else {
+        ii = (m-1-n/2);
+        kk = 2*(ll*(ll+1)-(ll-ii)*(ll-ii+1));
+
+        if (s<=4*(n-m)){
+          k = sizeP1 + (smax)*sizeC + kk*sizeC + (s-1)*sizeC + c;
+        } else {
+          k=-1;
+	      }
       }
-    }
-    else {
+    } else {
       ll = (n-1)/2-1;
       sizeP1 = 2*ll*(ll+1)*sizeC;
       sizeP1 += smax*sizeC;
       if (m <= (n-1)/2){
-	if ((s<=4*m)&&(s<=smax)){
-	  k = 2*(m-1)*((m-1)+1)*sizeC + (s-1)*sizeC + c;
-	}
-	else{
-	  k=-1;
-	}
-      }
-      else if (m == (n-1)/2+1) {
-	if (s<=smax){
-	  k = sizeP1 + (s-1)*sizeC + c;
-	}
-	else{
-	  k=-1;
-	}
-      }
-      else {
-	ii = (m-2-(n-1)/2);
-	kk = 2*(ll*(ll+1)-(ll-ii)*(ll-ii+1));
-	if (s<=4*(n-m)){
-	  k = sizeP1 + smax*sizeC + kk*sizeC + (s-1)*sizeC + c;
-	}
-	else{
-	  k=-1;
-	}
+        if ((s<=4*m)&&(s<=smax)){
+          k = 2*(m-1)*((m-1)+1)*sizeC + (s-1)*sizeC + c;
+        } else {
+	        k=-1;
+        }
+      } else if (m == (n-1)/2+1) {
+        if (s<=smax){
+          k = sizeP1 + (s-1)*sizeC + c;
+        }
+        else{
+          k=-1;
+        }
+      } else {
+        ii = (m-2-(n-1)/2);
+        kk = 2*(ll*(ll+1)-(ll-ii)*(ll-ii+1));
+        if (s<=4*(n-m)){
+          k = sizeP1 + smax*sizeC + kk*sizeC + (s-1)*sizeC + c;
+        } else {
+          k=-1;
+        }
       }
     }
     //if (k>=(size2D-(n+1)*sizeC)) fprintf(stderr, "ERROR out of triangle %d > %d \n",k, size2D-(n+1)*sizeC);
@@ -112,7 +91,7 @@ int index_2D(int m, int s, int c, int n, int sizeC, int smax, int size2D){
   return k;
 }
 
-void init_config (){
+void init_config(){
   int i,j,s_v;
   nhs=0;
   s=0;
@@ -126,7 +105,7 @@ void init_config (){
     for (j=1;j<=NC;j++){
       tab[i][j]=-1;
 
-      if (((float)rand()/(RAND_MAX+1.)) >= 0.5){
+      if (((double)rand()/(RAND_MAX+1.)) >= 0.5){
         tab[i][j]=1;
         nhs++;
       }
@@ -156,7 +135,7 @@ void init_config (){
     }
  }
 
- void init_densite(){
+void init_densite(){
    int i,j,k;
    for (i=0;i<=NSITES;i++)
       for (j=0;j<=S_MAX;j++)
@@ -164,15 +143,16 @@ void init_config (){
              d[i][j][k]=1.;
 }
 
- void ligcol(){
+void ligcol(){
   int i,j,k,ii;
   ii=1;
-  for (i=1;i<=NL;i++)
+  for (i=1;i<=NL;i++){
     for (j=1;j<=NC;j++){
       lig[ii]=i;
       col[ii]=j;
       ii++;
     }
+  }
 }
 
 void imprimer(){
@@ -208,11 +188,11 @@ void imprimer(){
  void montecarlo (){
   int icount=1,i,j,k,is_v,snew,nhsnew,nhscnew,nbre;
   int nrun, irun;
-  float r,proba;
-  float h[NSITES+1][S_MAX+1][nhsc_max+1];
+  double r,proba;
+  double h[NSITES+1][S_MAX+1][nhsc_max+1];
   double moycarr,carmoy,ety,etyrel,som_h,scar_h,nval,moy,som_d;
 
-  printf("avant while nhs, s, nhsc \n %d %d %d ",nhs,s,nhsc);
+  printf("\navant while nhs, s, nhsc \n %d %d %d ",nhs,s,nhsc);
 
   while (icount<= NBRE_D){
     /* RAZ de l'histogramme h */
@@ -258,7 +238,7 @@ void imprimer(){
         nhsc=nhscnew;
       }else{
         proba=d[nhs][(s+S_MAX)/2][nhsc]/d[nhsnew][(snew+S_MAX)/2][nhscnew] ;
-        r=(float)rand()/(RAND_MAX+1.) ;
+        r=(double)rand()/(RAND_MAX+1.) ;
         if ( r < proba ){
           tab[i][j]=-tab[i][j];
           nhs=nhsnew;
@@ -287,7 +267,7 @@ void imprimer(){
     carmoy=moy*moy;
     ety=moycarr-carmoy;
     etyrel=sqrt(fabs(ety))/moy;
-    printf("\n etape numero %d ecart type relatif=%lf",icount,etyrel);
+    printf("\n étape n°%d, écart-type relatif=%lf \n",icount,etyrel);
     som_d=0;
 
     /* on améliore d */
@@ -310,27 +290,3 @@ void imprimer(){
     icount+=1;
   }
 }
-
-int main(){
-  int i,j,k;
-
-  sizeC = nhsc_max;
-  if (sizeC < NC + 2 * NL) sizeC = NC + 2 * NL;
-
-  smax = S_MAX;
-  if (smax % 4!=0) smax += 4 -(smax % 4);
-
-  size2D = size_2D(NL,NC, sizeC);
-
- 	init_config();
-  init_densite();
-  ligcol();
-
-  montecarlo();
-  //imprimer();
-  printf ( "FIN \n");
-  //getchar();
-
-  return 0;
-}
-
