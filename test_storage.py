@@ -1,7 +1,7 @@
 # naive.py
 import sys
 
-
+# La fonction size_2D de dyprosco pour définir la taille de notre tableau donc 
 def size_2D(n1, n2, sizeC):
     n = n1 * n2
     if sizeC < n2 + 2 * n1:
@@ -54,14 +54,14 @@ def index_2D(m, s, c, n, sizeC, smax, size2D):
 
 
 
-n1, n2 = (3, 3)
+n1, n2 = (3,3)
 n = n1 * n2
+L= [] # Listes de toutes les arêtes internes(atomes voisins sur la grille n1xn2)
 
-L = []
 
 for r in range(n1):
     for col in range(n2):
-        k = r * n2 + col
+        k = r * n2 + col 
         if col < n2 - 1:
             L.append((k, k + 1))
         if r < n1 - 1:
@@ -73,16 +73,17 @@ B = [r * n2 + col
      if r in (0, n1 - 1) or col in (0, n2 - 1)]
 
 # paramètres de stockage (mêmes que size_2D)
-sizeC = max(n2 + 2 * n1, len(B) + 1)     # il faut c dans [0, |B|]
-smax = len(L)
+
+sizeC = max(n2 + 2 * n1, len(B) + 1)  # Borne supérieure pour l'indice du bord c
+smax = len(L) # Nombre maximales de liaisons alignées sur un multiple de 4 
 if smax % 4:
     smax += 4 - smax % 4
 size2D = size_2D(n1, n2, sizeC)
 
-d = [0] * size2D
+d = [0] * size2D # Tableau 1D de densité d'états
 
 for i in range(2**n):
-    bits = [(i >> b) & 1 for b in range(n)]               # la molécule
+    bits = [(i >> b) & 1 for b in range(n)]               # état de la molécule, 0 ou 1
 
     m = sum(bits)                                         # atomes à 1
     s = sum(1 for a, b in L if bits[a] != bits[b])        # arêtes déséquilibrées
@@ -93,44 +94,33 @@ for i in range(2**n):
         sys.exit(f"index hors tableau : i={i} (m={m}, s={s}, c={c}) -> {k}")
     d[k] += 1
 
-print(f"size2D = {size2D}, total = {sum(d)} (attendu {2**n})")
+for m in range(n + 1):
+    for s in list(range(smax+1)):
+        for c in range(sizeC):
+            k = index_2D(m, s, c, n, sizeC, smax, size2D)
+            if 0 <= k < size2D and d[k] > 0:
+                print(f"{m} {s} {c} {d[k]}")
 
-# ---------- affichage de quelques molécules avec leurs m, s, c ----------
-
-def calcul_msc(i):
-    bits = [(i >> b) & 1 for b in range(n)]
-    m = sum(bits)
-    s = sum(1 for a, b in L if bits[a] != bits[b])
-    c = sum(bits[a] for a in B)
-    return bits, m, s, c
-
-def afficher(indices, largeur=16):
-    blocs = []
-    for i in indices:
-        bits, m, s, c = calcul_msc(i)
-        bloc = [f"i = {i}"]
-        for r in range(n1):
-            bloc.append(" ".join(str(bits[r * n2 + col]) for col in range(n2)))
-        bloc.append(f"m = {m}")
-        bloc.append(f"s = {s}")
-        bloc.append(f"c = {c}")
-        blocs.append(bloc)
-
-    for lignes in zip(*blocs):
-        print("".join(l.ljust(largeur) for l in lignes))
+## Afin de comparer directement les résultats bruts avec le code C de dyprosco,
+## nous avons adapté write_2dCart_msc() dans src/d-io.c pour exporter les indices
+## entiers positifs (m, s, c) et la dégénérescence associée, plutôt que d'appliquer
+## la conversion linéaire vers les grandeurs physiques signées (M, E_interne, E_bord).
 
 
-def afficher_triangle():
-    print("  m \\ s " + "".join(f"{s:6d}" for s in range(smax + 1)))
-    for m in range(n + 1):
-        ligne = f"  {m:2d}    "
-        for s in range(smax + 1):
-            if index_2D(m, s, 0, n, sizeC, smax, size2D) < 0:
-                ligne += "     ."
-            else:
-                tot = sum(d[index_2D(m, s, c, n, sizeC, smax, size2D)]
-                          for c in range(len(B) + 1))
-                ligne += f"{tot:6d}"
-        print(ligne)
+print("\nVisualisation de l'espace alloué (triangle/losange) :")
+header = " m \\ s |" + "".join(f"{s:>5}" for s in range(smax + 1))
+print(header)
+print("-" * len(header))
 
-afficher_triangle()
+for m in range(n + 1):
+    row = f"{m:>5}  |"
+    for s in range(smax + 1):
+        # On teste c=0 pour savoir si le couple (m, s) est alloué dans le stockage creux
+        k0 = index_2D(m, s, 0, n, sizeC, smax, size2D)
+        if k0 < 0 or k0 >= size2D:
+            row += f"{'.':>5}"  # Hors du losange (non alloué en mémoire)
+        else:
+            # Somme sur toute la tranche c pour ce (m, s) alloué
+            total_ms = sum(d[k0 + c] for c in range(sizeC))
+            row += f"{total_ms:>5}"
+    print(row)
